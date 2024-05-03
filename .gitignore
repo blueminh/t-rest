@@ -1,3 +1,5 @@
 .idea
 models
 .DS_Store
+*.pyc
+tabsyn

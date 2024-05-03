@@ -60,7 +60,7 @@ def train(data_path: Path, model='distilgpt2', prompter_name: str = 'GReaTPrompt
 
         # Generate a Prompted dataset from the Dataframes.
         df, df_modified, structured_dataset, tokenizer, precision_map = structured_dataset_from_df(dataset_name, df,
-                                                                                                     model.tokenizer)
+                                                                                                     great.tokenizer)
 
         logger.warning(f"Running Structured GReaT")
 
@@ -104,7 +104,7 @@ def generate(model: GReaT, data_path: str, out_path: Path = OUTPUT_DIR / 'defaul
     #   of LogitsProcessor(List)
     if not structured:
         sampler = CompoundedGreatSampler(model.tokenizer, prompter=get_prompter(prompter_name ), great=model)
-        samples = model.sample(n_samples, k=sample_bs, max_length=400, great_start=sampler, reordered_prompt=False)
+        samples = model.sample(100, k=sample_bs, max_length=400, device="cpu")
 
         samples.to_csv(str(out_path), index=False)
     if structured:
@@ -206,3 +206,5 @@ if __name__ == '__main__':
         # Perpare model to generate and synthesize samples
         generate(model=great, data_path=DATASET_BASE_DIR / f"{args.data}.csv" ,
                  out_path=Path(str(f'{args.outpath}/{dataset_name}.structured.csv')))
+
+# python structured_main.py -d adult generate -modeldir models/adult_v_baseline -outpath ./results
