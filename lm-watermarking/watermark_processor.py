@@ -93,6 +93,7 @@ class WatermarkLogitsProcessor(WatermarkBase, LogitsProcessor):
 
     def _bias_greenlist_logits(self, scores: torch.Tensor, greenlist_mask: torch.Tensor, greenlist_bias: float) -> torch.Tensor:
         scores[greenlist_mask] = scores[greenlist_mask] + greenlist_bias
+        print(scores)
         return scores
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:

@@ -1,0 +1,2 @@
+age,workclass,fnlwgt,education,education-num,marital-status,occupation,relationship,race,sex,capitalgain,capitalloss,hoursperweek,native-country,class
+4.0,Private,82797.0,Some-college,10.0,Married-civ-spouse,Sales,Wife,White,Female,2.0,0.0,0.0,United-States,>50K

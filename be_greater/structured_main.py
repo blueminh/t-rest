@@ -104,9 +104,11 @@ def generate(model: GReaT, data_path: str, out_path: Path = OUTPUT_DIR / 'defaul
     #   of LogitsProcessor(List)
     if not structured:
         sampler = CompoundedGreatSampler(model.tokenizer, prompter=get_prompter(prompter_name ), great=model)
-        samples = model.sampwle(n_samples, k=sample_bs, max_length=400, device="cpu")
+        # samples = model.sample(1, k=sample_bs, max_length=400, device="cpu")
+        #
+        # samples.to_csv("test_sample.csv", index=False)
 
-        samples.to_csv("adult_samples_42k.csv", index=False)
+
     if structured:
         # Example code of how to generate with a structured sampler
         df, df_modified, structured_dataset, tokenizer, precision_map = structured_dataset_from_df(dataset_name, df,
