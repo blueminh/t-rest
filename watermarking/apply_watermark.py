@@ -19,8 +19,9 @@ watermark_processor = WatermarkLogitsProcessor(vocab=list(great.tokenizer.get_vo
                                                seeding_scheme="selfhash")
 
 # generation
-great_watermark_processor = GreatWatermark(great.tokenizer)
+great_watermark_processor = GreatWatermark(tokenizer=great.tokenizer,
+                                           vocab=list(great.tokenizer.get_vocab().values()))
 # samples = great.sample(1, k=1, max_length=400, device="cpu", logits_processor=watermark_processor)
-samples = great.sample(1, k=1, max_length=400, device="cpu", logits_processor=great_watermark_processor)
+samples = great.sample(1000, k=200, max_length=400, device="cpu", logits_processor=great_watermark_processor)
 
-# samples.to_csv("watermaked_adult_samples_test.csv", index=False)
+samples.to_csv("great_watermaked_adult_samples_1000.csv", index=False)

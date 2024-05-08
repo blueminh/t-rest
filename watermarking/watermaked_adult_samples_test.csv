@@ -1,4 +1,0 @@
-age,workclass,fnlwgt,education,education-num,marital-status,occupation,relationship,race,sex,capitalgain,capitalloss,hoursperweek,native-country,class
-4.0,Private,282023.0,HS-grad,9.0,Married-civ-spouse,Craft-repair,Husband,White,Male,0.0,0.0,2.0,United-States,>50K
-2.0,Self-emp-not-inc,126060.0,Prof-school,15.0,Never-married,Prof-specialty,Not-in-family,White,Female,0.0,0.0,1.0,United-States,<=50K
-0.0,Private,315877.0,HS-grad,9.0,Never-married,Other-service,Own-child,White,Male,0.0,0.0,0.0,United-States,<=50K
