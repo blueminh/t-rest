@@ -2,6 +2,7 @@ from be_great import GReaT
 import transformers
 
 from lm_watermarking.extended_watermark_processor import WatermarkLogitsProcessor
+from great_watermark import GreatWatermark
 
 model_path = "/Users/minhkau/Documents/TUDelft/Year 3/RP/Code/tabular-gpt/be_greater/models/adult_v_baseline"
 
@@ -18,5 +19,8 @@ watermark_processor = WatermarkLogitsProcessor(vocab=list(great.tokenizer.get_vo
                                                seeding_scheme="selfhash")
 
 # generation
-samples = great.sample(100, k=10, max_length=400, device="cpu", logits_processor=watermark_processor)
-samples.to_csv("watermaked_adult_samples_100.csv", index=False)
+great_watermark_processor = GreatWatermark(great.tokenizer)
+# samples = great.sample(1, k=1, max_length=400, device="cpu", logits_processor=watermark_processor)
+samples = great.sample(1, k=1, max_length=400, device="cpu", logits_processor=great_watermark_processor)
+
+# samples.to_csv("watermaked_adult_samples_test.csv", index=False)
