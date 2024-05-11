@@ -35,7 +35,8 @@ sample_name= "great_watermaked_adult_samples_1000_fixed_seed.csv"
 
 syn_data = pd.read_csv(samples_dir + "/" + sample_name)
 great_watermark_detector = GreatWatermarkDetector(great_watermark_processor)
-great_watermark_detector.detect(syn_data)
+# great_watermark_detector.detect(syn_data)
+great_watermark_detector.print_with_color(syn_data)
 #
 # real_data = pd.read_csv(samples_dir + "/adult.csv")
 # great_watermark_detector.detect(real_data)
