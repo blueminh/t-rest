@@ -24,18 +24,18 @@ great_watermark_processor = GreatWatermarkLogitProcessor(tokenizer=great.tokeniz
                                                          device="cpu",
                                                          vocab=list(great.tokenizer.get_vocab().values()),
                                                          gamma=0.25,
-                                                         delta=2.0)
+                                                         delta=5.0)
 
 samples_dir = "/Users/minhkau/Documents/TUDelft/Year 3/RP/Code/tabular-gpt/samples"
 # sample_name = "great_watermaked_adult_samples_gamma_5.csv"
-sample_name= "great_watermaked_adult_samples_1000_fixed_seed.csv"
+sample_name= "great_watermaked_adult_samples_1000_high_delta.csv"
 
 # samples = great.sample(1000, k=100, max_length=400, device="cpu", logits_processor=great_watermark_processor)
 # samples.to_csv(samples_dir  + "/" + sample_name, index=False)
 
 syn_data = pd.read_csv(samples_dir + "/" + sample_name)
 great_watermark_detector = GreatWatermarkDetector(great_watermark_processor)
-# great_watermark_detector.detect(syn_data)
+great_watermark_detector.detect(syn_data)
 great_watermark_detector.print_with_color(syn_data)
 #
 # real_data = pd.read_csv(samples_dir + "/adult.csv")
