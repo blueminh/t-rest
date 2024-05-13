@@ -1,6 +1,10 @@
+import scipy
 import torch
+from math import sqrt
 from transformers import (LogitsProcessor, AutoTokenizer)
 import numpy as np
+
+
 class GreatWatermarkLogitProcessor(LogitsProcessor):
 
     def __init__(
@@ -85,21 +89,62 @@ class GreatWatermarkDetector:
         self.watermark_logit_processor = watermark_logit_processor
         self.tokenizer = watermark_logit_processor.tokenizer
 
+    """
+    Return the number of tokens in a column and the number of greenlist tokens
+    """
+
     def _count_greenlist_tokens_per_column(self, col_name, col_values):
         greenlist_ids = self.watermark_logit_processor.get_greenlist_ids(col_name)
 
         tokens = np.concatenate([self.tokenizer.encode(" " + str(col_val)) for col_val in col_values])
         is_in_green = torch.isin(torch.LongTensor(tokens), greenlist_ids)
         count_tokens_in_green_list = torch.sum(is_in_green).item()
-        print("{}: {} out of {}".format(col_name, count_tokens_in_green_list, len(tokens)))
-        # convert text values to tokens
+        # print("{}: {} out of {}".format(col_name, count_tokens_in_green_list, len(tokens)))
+        return len(tokens), count_tokens_in_green_list
 
-    def detect(self, df):
+    def _compute_z_score(self, observed_count, T, gamma):
+        # count refers to number of green tokens, T is total number of tokens
+        expected_count = gamma * T
+        # expected_count = gamma
+        numer = observed_count - expected_count
+        denom = sqrt(expected_count * (1 - gamma))
+        z = numer / denom
+        return z
+
+    def _compute_p_value(self, z):
+        p_value = scipy.stats.norm.sf(z)
+        return p_value
+
+    def detect(self, df, included_columns=None, total_tokens_limit=1000):
+        if included_columns:
+            df = df[included_columns]
         columns = [col.strip() for col in df.columns.tolist()]
+        col_stats = {}
+        total_tokens = 0
+        total_greenlist_tokens = 0
         for column_name in columns:
-            self._count_greenlist_tokens_per_column(column_name, df[column_name])
+            col_total_tokens, col_greenlist_tokens = self._count_greenlist_tokens_per_column(column_name,
+                                                                                             df[column_name])
+            col_stats[column_name] = {
+                "total_tokens": col_total_tokens,
+                "greenlist_tokens": col_greenlist_tokens,
+                "greenlist_percentage": col_greenlist_tokens * 1.0 / col_total_tokens
+            }
+            total_tokens += col_total_tokens
+            total_greenlist_tokens += col_greenlist_tokens
 
-    def print_with_color(self, df):
+        z_score = self._compute_z_score(total_greenlist_tokens, total_tokens, self.watermark_logit_processor.gamma)
+        final_scores = {
+            "z_score": z_score,
+            "p_value": self._compute_p_value(z_score),
+            "total_tokens": total_tokens,
+            "greenlist_tokens": total_greenlist_tokens,
+            "greenlist_percentage": total_greenlist_tokens * 1.0 / total_tokens,
+            "columns_stats": col_stats
+        }
+        return final_scores
+
+    def print_with_color(self, df, num_rows=50):
 
         columns = [col.strip() for col in df.columns.tolist()]
         column_greenlists = {}
@@ -111,11 +156,10 @@ class GreatWatermarkDetector:
             column_max_width[col_name] = max_text_length
 
         for row_index, row in df.iterrows():  # a single row
-            print()
-            for col_index, col_name in enumerate(columns): # for each value
+            for col_index, col_name in enumerate(columns):  # for each value
                 value = row[col_name]
                 token_ids = self.tokenizer.encode(" " + str(value))
-                for token_index, token in enumerate(token_ids): # for each token within a value
+                for token_index, token in enumerate(token_ids):  # for each token within a value
 
                     color = '\033[92m' if token in column_greenlists[col_name] else '\033[91m'
                     end_color = '\033[0m'
@@ -125,3 +169,7 @@ class GreatWatermarkDetector:
 
                 padding_length = column_max_width[col_name] - len(str(value)) + 1
                 print(" " * padding_length, end="")
+            print()
+            if row_index == num_rows:
+                break
+
