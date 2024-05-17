@@ -115,10 +115,25 @@ class GreatWatermarkDetector:
         p_value = scipy.stats.norm.sf(z)
         return p_value
 
-    def detect(self, df, included_columns=None, total_tokens_limit=1000):
+    def _count_token_in_row(self, row):
+        count = 0
+        for _, value in row.items():
+            count += len(self.tokenizer.encode(" " + str(value)))
+        return count
+
+    def detect(self, df, included_columns=None, total_tokens_limit=200):
         if included_columns:
             df = df[included_columns]
+
+        # z-score increases as length increases. Even real data might yield a very high z-score
+        # count the number of tokens in a row to estimate the number of rows to consider
+        tokens_per_row = self._count_token_in_row(df.iloc[0])
+        # if there are too many tokens, randomly sample a number of rows in the df
+        num_row = total_tokens_limit // tokens_per_row
+        df = df.sample(n=num_row, random_state=42)
+
         columns = [col.strip() for col in df.columns.tolist()]
+        # calculate the score for each column
         col_stats = {}
         total_tokens = 0
         total_greenlist_tokens = 0
@@ -140,7 +155,8 @@ class GreatWatermarkDetector:
             "total_tokens": total_tokens,
             "greenlist_tokens": total_greenlist_tokens,
             "greenlist_percentage": total_greenlist_tokens * 1.0 / total_tokens,
-            "columns_stats": col_stats
+            "columns_stats": col_stats,
+            "num_row": num_row,
         }
         return final_scores
 
@@ -172,4 +188,3 @@ class GreatWatermarkDetector:
             print()
             if row_index == num_rows:
                 break
-

@@ -39,7 +39,7 @@ def generation(model_name, sample_size, batch_size=50, write_to_file=False, with
     return samples
 
 
-def detection(sample_name, gamma, delta, included_columns=None, sample_df=None, print_tokens=False):
+def detection(sample_name, gamma, delta, included_columns=None, sample_df=None, print_tokens=False, tokens_limit = 1000):
     samples_dir = "/Users/minhkau/Documents/TUDelft/Year 3/RP/Code/tabular-gpt/samples/"
     tokenizer = transformers.AutoTokenizer.from_pretrained('distilgpt2', add_prefix_space=True)
     tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -54,27 +54,31 @@ def detection(sample_name, gamma, delta, included_columns=None, sample_df=None, 
     if print_tokens:
         great_watermark_detector.print_with_color(data)
 
-    return great_watermark_detector.detect(data, included_columns)
+    return great_watermark_detector.detect(data, included_columns, total_tokens_limit=tokens_limit)
 
 
 # generation(
-#     model_name="california",
-#     sample_size=100,
-#     batch_size=10,
+#     model_name="abalone_v_baseline",
+#     sample_size=1000,
+#     batch_size=100,
 #     write_to_file=True,
 #     with_watermark=True,
 #     gamma=0.25,
 #     delta=2.0
 # )
-
+#
 pp = pprint.PrettyPrinter(indent=2)
-pp.pprint(detection("california_100_non-watermark.csv",
+pp.pprint(detection("abalone_v_baseline_1000_non-watermark.csv",
                     gamma=0.25,
                     delta=2.0,
-                    print_tokens=True)['z_score'])
+                    print_tokens=True,
+                    tokens_limit=200
+                    )
+          )
 
-pp.pprint(detection("california_100_with-watermark_gamma-0.25_delta-2.0.csv",
+pp.pprint(detection("abalone_v_baseline_1000_with-watermark_gamma-0.25_delta-2.0.csv",
                     gamma=0.25,
                     delta=2.0,
-                    print_tokens=True)['z_score']
+                    print_tokens=True,
+                    tokens_limit=200)
           )
