@@ -121,7 +121,7 @@ class GreatWatermarkDetector:
             count += len(self.tokenizer.encode(" " + str(value)))
         return count
 
-    def detect(self, df, included_columns=None, total_tokens_limit=200):
+    def detect(self, df, included_columns=None, total_tokens_limit=200, random_state=42):
         if included_columns:
             df = df[included_columns]
 
@@ -130,7 +130,7 @@ class GreatWatermarkDetector:
         tokens_per_row = self._count_token_in_row(df.iloc[0])
         # if there are too many tokens, randomly sample a number of rows in the df
         num_row = total_tokens_limit // tokens_per_row
-        df = df.sample(n=num_row, random_state=42)
+        df = df.sample(n=num_row, random_state=random_state)
 
         columns = [col.strip() for col in df.columns.tolist()]
         # calculate the score for each column
