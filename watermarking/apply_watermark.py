@@ -76,9 +76,9 @@ pp = pprint.PrettyPrinter(indent=2)
 #                     )
 #           )
 
-pp.pprint(detection("abalone_v_baseline_1000_with-watermark_gamma-0.25_delta-2.0.csv",
+pp.pprint(detection("adult_with-watermark_1000.csv",
                     gamma=0.25,
                     delta=2.0,
                     print_tokens=True,
-                    tokens_limit=200)
+                    tokens_limit=10000)
           )
