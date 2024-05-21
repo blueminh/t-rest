@@ -57,7 +57,7 @@ def detection(sample_name, gamma, delta, included_columns=None, sample_df=None, 
     return great_watermark_detector.detect(data, included_columns, total_tokens_limit=tokens_limit)
 
 
-model_names = ["california","abalone","adult","diabetes"]
+model_names = ["california", "abalone", "adult", "diabetes"]
 for model_name in model_names:
     print(model_name)
     generation(
@@ -66,12 +66,12 @@ for model_name in model_names:
         batch_size=100,
         write_to_file=True,
         with_watermark=True,
-        gamma=0.25,
-        delta=5.0
+        gamma=0.5,
+        delta=2.0
     )
 
-pp = pprint.PrettyPrinter(indent=2)
-# pp.pprint(detection("abalone_v_baseline_1000_non-watermark.csv",
+# pp = pprint.PrettyPrinter(indent=2)
+# pp.pprint(detection("adult.csv",
 #                     gamma=0.25,
 #                     delta=2.0,
 #                     print_tokens=True,
