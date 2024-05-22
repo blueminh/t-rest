@@ -80,8 +80,30 @@ pp = pprint.PrettyPrinter(indent=2)
 #           )
 
 pp.pprint(detection("adult_1000_with-watermark_gamma-0.5_delta-2.0.csv",
-                    gamma=0.25,
+                    gamma=0.5,
                     delta=2.0,
                     print_tokens=True,
-                    tokens_limit=200)
+                    tokens_limit=500)
           )
+
+pp.pprint(detection("adult.csv",
+                    gamma=0.5,
+                    delta=2.0,
+                    print_tokens=True,
+                    tokens_limit=500)
+          )
+#
+# pp.pprint(detection("california.csv",
+#                     gamma=0.5,
+#                     delta=2.0,
+#                     print_tokens=False,
+#                     tokens_limit=200)
+#           )
+#
+# pp.pprint(detection("california_1000_with-watermark_gamma-0.5_delta-2.0.csv",
+#                     gamma=0.5,
+#                     delta=2.0,
+#                     print_tokens=False,
+#                     tokens_limit=200)
+#           )
+

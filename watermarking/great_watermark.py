@@ -121,10 +121,33 @@ class GreatWatermarkDetector:
             count += len(self.tokenizer.encode(" " + str(value)))
         return count
 
-    def detect(self, df, included_columns=None, total_tokens_limit=200, random_state=42):
+    def softmax(self, x, T=1.0):
+        # Higher softmax temp == softer ~ lower spike
+        e_x = np.exp((x - np.max(x)) / T)  # Subtract max for numerical stability
+        return e_x / e_x.sum(axis=0)
+
+    def _calculate_entropy(self, col):
+        value_counts = col.value_counts()
+        probabilities = value_counts / len(col)
+        entropy = -np.sum(probabilities * np.log2(probabilities))
+        return entropy
+
+    def get_column_weights(self, df, softmax_temperature=2.0, linear_scale=1.0):
+        entropies = {}
+        for col in df.columns:
+            entropies[col] = self._calculate_entropy(df[col])
+
+        entropy_values = np.array(list(entropies.values()))
+        softmax_weights = self.softmax(entropy_values,  softmax_temperature)
+        # Map the softmax weights back to column names
+        column_weights = dict(zip(entropies.keys(), softmax_weights * len(entropies.values()) * linear_scale))
+
+        return column_weights
+
+    def detect(self, df, included_columns=None, total_tokens_limit=200, random_state=42, softmax_temperature=2.0, linear_scale=1.0):
         if included_columns:
             df = df[included_columns]
-
+        column_weights = self.get_column_weights(df, softmax_temperature, linear_scale)
         # z-score increases as length increases. Even real data might yield a very high z-score
         # count the number of tokens in a row to estimate the number of rows to consider
         tokens_per_row = self._count_token_in_row(df.iloc[0])
@@ -137,25 +160,32 @@ class GreatWatermarkDetector:
         col_stats = {}
         total_tokens = 0
         total_greenlist_tokens = 0
+        total_weighted_greenlist_tokens = 0
         for column_name in columns:
             col_total_tokens, col_greenlist_tokens = self._count_greenlist_tokens_per_column(column_name,
                                                                                              df[column_name])
+            weighted_greenlist_tokens = col_greenlist_tokens * column_weights[column_name]
             col_stats[column_name] = {
                 "total_tokens": col_total_tokens,
                 "greenlist_tokens": col_greenlist_tokens,
-                "greenlist_percentage": col_greenlist_tokens * 1.0 / col_total_tokens
+                "greenlist_percentage": col_greenlist_tokens * 1.0 / col_total_tokens,
+                "weighted_greenlist_tokens": weighted_greenlist_tokens
             }
             total_tokens += col_total_tokens
             total_greenlist_tokens += col_greenlist_tokens
+            total_weighted_greenlist_tokens += weighted_greenlist_tokens
 
         z_score = self._compute_z_score(total_greenlist_tokens, total_tokens, self.watermark_logit_processor.gamma)
+        weighted_z_score = self._compute_z_score(total_weighted_greenlist_tokens, total_tokens, self.watermark_logit_processor.gamma)
         final_scores = {
             "z_score": z_score,
             "p_value": self._compute_p_value(z_score),
+            "weighted_z_score": weighted_z_score,
             "total_tokens": total_tokens,
             "greenlist_tokens": total_greenlist_tokens,
+            "weighted_greenlist_tokens": total_weighted_greenlist_tokens,
             "greenlist_percentage": total_greenlist_tokens * 1.0 / total_tokens,
-            "columns_stats": col_stats,
+            # "columns_stats": col_stats,
             "num_row": num_row,
         }
         return final_scores
