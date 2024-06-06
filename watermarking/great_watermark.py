@@ -219,6 +219,12 @@ class GreatWatermarkDetector:
             max_text_length = max(len(str(value)) for value in df[col_name])
             column_max_width[col_name] = max_text_length
 
+        for col_name in columns:
+            print(" " + col_name, end="")
+            padding_length = column_max_width[col_name] - len(col_name) + 1
+            print(" " * padding_length, end="")
+        print()  # Print newline after printing column names
+
         for row_index, row in df.iterrows():  # a single row
             for col_index, col_name in enumerate(columns):  # for each value
                 value = row[col_name]
