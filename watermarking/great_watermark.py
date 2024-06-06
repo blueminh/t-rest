@@ -121,10 +121,43 @@ class GreatWatermarkDetector:
             count += len(self.tokenizer.encode(" " + str(value)))
         return count
 
-    def detect(self, df, included_columns=None, total_tokens_limit=200, random_state=42):
+    def power(self, x, n):
+        # Higher softmax temp == softer ~ lower spike
+        # e_x = np.exp((x - np.max(x)) / T)  # Subtract max for numerical stability
+        # return e_x / e_x.sum(axis=0)
+
+        square_x = np.power(x, n)
+        return square_x / square_x.sum(axis=0)
+
+    def softmax(self, x, T=1.0):
+        e_x = np.exp((x - np.mean(x)) / T)  # Subtract max for numerical stability
+        return e_x / e_x.sum(axis=0)
+
+    def _calculate_entropy(self, col):
+        value_counts = col.value_counts()
+        probabilities = value_counts / len(col)
+        entropy = -np.sum(probabilities * np.log2(probabilities))
+        return entropy
+
+    def get_column_weights(self, df, softmax_temp=5.0, custom_softmax=None):
+        entropies = {}
+        for col in df.columns:
+            entropies[col] = self._calculate_entropy(df[col])
+
+        entropy_values = np.array(list(entropies.values()))
+        if custom_softmax:
+            softmax_weights = custom_softmax(entropy_values)
+        else:
+            softmax_weights = self.softmax(entropy_values, softmax_temp)
+        # Map the softmax weights back to column names
+        column_weights = dict(zip(entropies.keys(), softmax_weights * len(entropies.values())))
+
+        return column_weights
+
+    def detect(self, df, included_columns=None, total_tokens_limit=200, random_state=42, softmax_temperature=2.0, custom_softmax=None):
         if included_columns:
             df = df[included_columns]
-
+        column_weights = self.get_column_weights(df, softmax_temp=softmax_temperature, custom_softmax=custom_softmax)
         # z-score increases as length increases. Even real data might yield a very high z-score
         # count the number of tokens in a row to estimate the number of rows to consider
         tokens_per_row = self._count_token_in_row(df.iloc[0])
@@ -137,25 +170,40 @@ class GreatWatermarkDetector:
         col_stats = {}
         total_tokens = 0
         total_greenlist_tokens = 0
+        # total_weighted_tokens = 0
+        total_weighted_greenlist_tokens = 0
         for column_name in columns:
             col_total_tokens, col_greenlist_tokens = self._count_greenlist_tokens_per_column(column_name,
                                                                                              df[column_name])
+            weighted_greenlist_tokens = col_greenlist_tokens * column_weights[column_name]
             col_stats[column_name] = {
                 "total_tokens": col_total_tokens,
                 "greenlist_tokens": col_greenlist_tokens,
-                "greenlist_percentage": col_greenlist_tokens * 1.0 / col_total_tokens
+                "greenlist_percentage": col_greenlist_tokens * 1.0 / col_total_tokens,
+                "weighted_greenlist_tokens": weighted_greenlist_tokens
             }
+            # calculate total tokens
             total_tokens += col_total_tokens
+            # total_weighted_tokens += col_total_tokens * column_weights[column_name]
+
+            # calculate green list tokens
             total_greenlist_tokens += col_greenlist_tokens
+            total_weighted_greenlist_tokens += weighted_greenlist_tokens
 
         z_score = self._compute_z_score(total_greenlist_tokens, total_tokens, self.watermark_logit_processor.gamma)
+        weighted_z_score = self._compute_z_score(total_weighted_greenlist_tokens, total_tokens, self.watermark_logit_processor.gamma)
+        # weighted_z_score_adjusted_total = self._compute_z_score(total_weighted_greenlist_tokens, total_weighted_tokens, self.watermark_logit_processor.gamma)
+
         final_scores = {
             "z_score": z_score,
             "p_value": self._compute_p_value(z_score),
+            "weighted_z_score": weighted_z_score,
+            # "weighted_z_score_adjusted_total": weighted_z_score_adjusted_total,
             "total_tokens": total_tokens,
+            # "total_weighted_tokens": total_weighted_tokens,
             "greenlist_tokens": total_greenlist_tokens,
+            "weighted_greenlist_tokens": total_weighted_greenlist_tokens,
             "greenlist_percentage": total_greenlist_tokens * 1.0 / total_tokens,
-            "columns_stats": col_stats,
             "num_row": num_row,
         }
         return final_scores
@@ -170,6 +218,12 @@ class GreatWatermarkDetector:
             column_greenlists[col_name] = self.watermark_logit_processor.get_greenlist_ids(col_name)
             max_text_length = max(len(str(value)) for value in df[col_name])
             column_max_width[col_name] = max_text_length
+
+        for col_name in columns:
+            print(" " + col_name, end="")
+            padding_length = column_max_width[col_name] - len(col_name) + 1
+            print(" " * padding_length, end="")
+        print()  # Print newline after printing column names
 
         for row_index, row in df.iterrows():  # a single row
             for col_index, col_name in enumerate(columns):  # for each value
