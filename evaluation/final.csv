@@ -1,0 +1,9 @@
+attack_type,auc_non_weighted,tpr_non_weighted,auc_weighted,tpr_weighted
+synonym_0.5,0.708,0.104,0.981,0.881
+synonym_0.25,0.903,0.389,0.973,0.87
+synonym_0.8,0.466,0.016,0.951,0.736
+shift_0.1,0.677,0.069,0.627,0.08
+shift_0.25,0.624,0.074,0.577,0.086
+shift_0.05,0.747,0.105,0.721,0.15
+rounding_0_digits,0.85,0.205,0.782,0.254
+rounding_2_digits,0.987,0.525,0.985,0.625
