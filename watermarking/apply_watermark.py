@@ -71,24 +71,32 @@ def detection(sample_name, gamma, delta, included_columns=None, sample_df=None, 
 #         delta=2.0
 #     )
 
-generation(
-    model_name="abalone",
-    sample_size=1000,
-    batch_size=100,
-    write_to_file=True,
-    with_watermark=True,
-    gamma=0.5,
-    delta=1.0
-)
+# generation(
+#     model_name="abalone",
+#     sample_size=1000,
+#     batch_size=100,
+#     write_to_file=True,
+#     with_watermark=True,
+#     gamma=0.5,
+#     delta=1.0
+# )
 
-# pp = pprint.PrettyPrinter(indent=2)
-# pp.pprint(detection("adult.csv",
-#                     gamma=0.25,
-#                     delta=2.0,
-#                     print_tokens=True,
-#                     tokens_limit=200
-#                     )
-#           )
+pp = pprint.PrettyPrinter(indent=2)
+pp.pprint(detection("diabetes_1000_with-watermark_gamma-0.25_delta-2.0.csv",
+                    gamma=0.25,
+                    delta=2.0,
+                    print_tokens=True,
+                    tokens_limit=200
+                    )
+          )
+
+pp.pprint(detection("attacked_samples/random_noise_0.01_diabetes_1000_with-watermark_gamma-0.25_delta-2.0.csv",
+                    gamma=0.25,
+                    delta=2.0,
+                    print_tokens=True,
+                    tokens_limit=200
+                    )
+          )
 
 # pp.pprint(detection("adult_1000_with-watermark_gamma-0.5_delta-2.0.csv",
 #                     gamma=0.5,
