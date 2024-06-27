@@ -1,0 +1,4 @@
+#python great_miss_credit_vert.py
+#python great_miss_credit_horiz.py
+python great_miss_credit_fewvert.py
+python great_miss_credit_fewhorz.py

@@ -1,0 +1,7 @@
+.idea
+models
+.DS_Store
+*.pyc
+tabsyn
+*.bkp
+Duwak-BDE5
