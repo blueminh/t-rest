@@ -86,17 +86,28 @@ pp.pprint(detection("diabetes_1000_with-watermark_gamma-0.25_delta-2.0.csv",
                     gamma=0.25,
                     delta=2.0,
                     print_tokens=True,
-                    tokens_limit=200
+                    tokens_limit=200,
+                    included_columns=["Glucose", "BloodPressure", "Insulin", "BMI", "Age", "Outcome"]
                     )
           )
 
-pp.pprint(detection("attacked_samples/random_noise_0.01_diabetes_1000_with-watermark_gamma-0.25_delta-2.0.csv",
+pp = pprint.PrettyPrinter(indent=2)
+pp.pprint(detection("diabetes.csv",
                     gamma=0.25,
                     delta=2.0,
                     print_tokens=True,
-                    tokens_limit=200
+                    included_columns=["Glucose", "BloodPressure", "Insulin", "BMI", "Age", "Outcome"]
+                    # included_columns=['fnlwgt','sex','occupation','class','relationship']
                     )
           )
+
+# pp.pprint(detection("attacked_samples/random_noise_0.01_diabetes_1000_with-watermark_gamma-0.25_delta-2.0.csv",
+#                     gamma=0.25,
+#                     delta=2.0,
+#                     print_tokens=True,
+#                     tokens_limit=200
+#                     )
+#           )
 
 # pp.pprint(detection("adult_1000_with-watermark_gamma-0.5_delta-2.0.csv",
 #                     gamma=0.5,
