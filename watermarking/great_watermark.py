@@ -217,6 +217,7 @@ class GreatWatermarkDetector:
         for col_name in columns:
             column_greenlists[col_name] = self.watermark_logit_processor.get_greenlist_ids(col_name)
             max_text_length = max(len(str(value)) for value in df[col_name])
+            max_text_length = max(max_text_length, len(col_name))
             column_max_width[col_name] = max_text_length
 
         for col_name in columns:
@@ -232,6 +233,7 @@ class GreatWatermarkDetector:
                 for token_index, token in enumerate(token_ids):  # for each token within a value
 
                     color = '\033[92m' if token in column_greenlists[col_name] else '\033[91m'
+                    # color = '\033[30m' # black
                     end_color = '\033[0m'
                     token_text = self.tokenizer.decode(token)
                     # Print colored token with padding
